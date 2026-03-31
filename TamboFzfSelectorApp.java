@@ -84,7 +84,7 @@ public class TamboFzfSelectorApp extends ToolkitApp {
 
 final class FzfModel {
 
-    enum LoadPhase { LOADING, READY }
+    enum LoadPhase {LOADING, READY}
 
     private final List<String> allItems = new ArrayList<>();
     private final List<String> filteredItems = new ArrayList<>();
@@ -413,7 +413,7 @@ final class FzfView {
 
         return panel(listWidget)
                 .rounded()
-        .borderColor(listBorderColor())
+                .borderColor(listBorderColor())
                 .id("fzf-list")
                 .focusedBorderColor(Color.YELLOW)
                 .focusable()
