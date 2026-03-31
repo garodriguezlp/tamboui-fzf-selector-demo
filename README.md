@@ -24,6 +24,29 @@ This project is mostly educational: it demonstrates a clear MVC split and practi
 jbang TamboFzfSelectorApp.java
 ```
 
+## JBang Wrapper
+
+This repository includes the JBang wrapper (`jbang`, `jbang.cmd`, `jbang.ps1`), so contributors can run with a repo-local JBang launcher.
+
+Wrapper was installed with:
+
+```bash
+jbang wrapper install
+```
+
+Run using the wrapper:
+
+```bash
+# macOS/Linux
+./jbang TamboFzfSelectorApp.java
+
+# Windows (cmd)
+jbang.cmd TamboFzfSelectorApp.java
+
+# Windows (PowerShell)
+.\jbang.ps1 TamboFzfSelectorApp.java
+```
+
 Exit code behavior:
 
 - `0` when an item is selected (prints selected value)
