@@ -12,11 +12,14 @@
 
 import static dev.tamboui.toolkit.Toolkit.column;
 import static dev.tamboui.toolkit.Toolkit.dock;
+import static dev.tamboui.toolkit.Toolkit.gauge;
 import static dev.tamboui.toolkit.Toolkit.list;
 import static dev.tamboui.toolkit.Toolkit.panel;
 import static dev.tamboui.toolkit.Toolkit.row;
+import static dev.tamboui.toolkit.Toolkit.spinner;
 import static dev.tamboui.toolkit.Toolkit.text;
 
+import java.time.Duration;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Locale;
@@ -61,16 +64,27 @@ public class TamboFzfSelectorApp extends ToolkitApp {
 
     @Override
     protected void onStart() {
-        model.initialize();
+        runner().scheduleRepeating(() -> {
+            runner().runOnRenderThread(() -> {
+                if (model.loadPhase() == FzfModel.LoadPhase.LOADING) {
+                    model.advanceLoad(0.05);
+                }
+            });
+        }, Duration.ofMillis(50));
     }
 
     @Override
     protected Element render() {
-        return view.render();
+        return switch (model.loadPhase()) {
+            case LOADING -> view.renderLoading();
+            case READY -> view.render();
+        };
     }
 }
 
 final class FzfModel {
+
+    enum LoadPhase { LOADING, READY }
 
     private final List<String> allItems = new ArrayList<>();
     private final List<String> filteredItems = new ArrayList<>();
@@ -79,9 +93,24 @@ final class FzfModel {
     private int selectedIndex = 0;
     private String selectedItem = null;
 
-    void initialize() {
-        loadHardcodedItems();
-        rebuildAndClampSelection();
+    private LoadPhase loadPhase = LoadPhase.LOADING;
+    private double loadProgress = 0.0;
+
+    LoadPhase loadPhase() {
+        return loadPhase;
+    }
+
+    double loadProgress() {
+        return loadProgress;
+    }
+
+    void advanceLoad(double delta) {
+        loadProgress = Math.min(1.0, loadProgress + delta);
+        if (loadProgress >= 1.0) {
+            loadHardcodedItems();
+            rebuildAndClampSelection();
+            loadPhase = LoadPhase.READY;
+        }
     }
 
     List<String> filteredItems() {
@@ -334,6 +363,28 @@ final class FzfView {
                 .top(headerPanel())
                 .center(row(listPanel(), detailPanel()))
                 .bottom(column(filterPanel(), footerPanel()));
+    }
+
+    Element renderLoading() {
+        return dock()
+                .top(headerPanel())
+                .center(row(loadingListPanel(), detailPanel()))
+                .bottom(loadingFooterPanel());
+    }
+
+    private Element loadingListPanel() {
+        return panel(
+                column(
+                        row(spinner().cyan(), text("  Fetching items from API\u2026").dim()),
+                        gauge(model.loadProgress()).green()
+                )
+        ).rounded().borderColor(Color.CYAN).title("Loading\u2026").fill(1);
+    }
+
+    private Element loadingFooterPanel() {
+        return panel(
+                text("Loading data, please wait\u2026").dim()
+        ).rounded().borderColor(Color.DARK_GRAY);
     }
 
     private Element headerPanel() {
